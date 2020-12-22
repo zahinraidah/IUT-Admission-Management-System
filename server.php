@@ -1,21 +1,43 @@
 <?php
+session_start();
 
-/**
- * Laravel - A PHP Framework For Web Artisans
- *
- * @package  Laravel
- * @author   Taylor Otwell <taylor@laravel.com>
- */
+// initializing variables
+$username = "";
+$email    = "";
+$errors = array(); 
 
-$uri = urldecode(
-    parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)
-);
+// connect to the database
+$db = mysqli_connect('localhost', 'root', '', 'isapp');
 
-// This file allows us to emulate Apache's "mod_rewrite" functionality from the
-// built-in PHP web server. This provides a convenient way to test a Laravel
-// application without having installed a "real" web server software here.
-if ($uri !== '/' && file_exists(__DIR__.'/public'.$uri)) {
-    return false;
+// ... 
+// LOGIN USER
+if (isset($_POST['login_user'])) {
+  $username = mysqli_real_escape_string($db, $_POST['username']);
+  $password = mysqli_real_escape_string($db, $_POST['password']);
+
+  if (empty($username)) {
+    array_push($errors, "Username is required");
+  }
+  if (empty($password)) {
+    array_push($errors, "Password is required");
+  }
+
+  if (count($errors) == 0) {
+    $password = $password;
+    $query = "SELECT * FROM admin WHERE username='$username' AND password='$password'";
+    $results = mysqli_query($db, $query);
+
+    if (mysqli_num_rows($results) == 1) {
+
+      $row = $results->fetch_assoc();
+      $_SESSION['username'] = $username;
+      $_SESSION['id']=$row['id'];
+      $_SESSION['success'] = "You are now logged in";
+      header('location: index.php');
+    }else {
+      array_push($errors, "Wrong username/password combination");
+    }
+  }
 }
 
-require_once __DIR__.'/public/index.php';
+?>
